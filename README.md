@@ -159,7 +159,7 @@ python src/anomaly_engine.py
 
 ```bash
 
-python -m streamlit run dashboard_anomalias.py
+python -m streamlit run src/dashboard_anomalias.py
 
 ```
 
