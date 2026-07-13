@@ -42,7 +42,6 @@ dist/
 *.xlsx
 *.csv
 
-config_motor.json
 credentials.json
 secret.json
 

@@ -1,0 +1,8 @@
+{
+  "paths": {
+    "log_processado": "data/log_sistema.txt"
+  },
+  "parametros": {
+    "ativos": ["PETR4.SA", "VALE3.SA", "ITUB4.SA", "ABEV3.SA", "BBDC4.SA"]
+  }
+}
