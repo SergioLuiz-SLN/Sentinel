@@ -1,17 +1,62 @@
+# ======================
 # Python
+# ======================
+
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+
+# ======================
+# Virtual Environment
+# ======================
+
 .env
 .venv/
 venv/
 
-# Dados e Logs (Não expor dados corporativos!)
+# ======================
+# IDE
+# ======================
+
+.vscode/
+.idea/
+
+# ======================
+# Build
+# ======================
+
+build/
+dist/
+
+# ======================
+# Testes
+# ======================
+
+.pytest_cache/
+
+# ======================
+# Dados privados
+# ======================
+
 *.xlsx
 *.csv
-*.txt
-*.json
+
+config_motor.json
+credentials.json
+secret.json
+
 !config_motor_example.json
 
-# OS
+# ======================
+# Logs
+# ======================
+
+*.log
+
+# ======================
+# Sistema Operacional
+# ======================
+
 .DS_Store
 Thumbs.db

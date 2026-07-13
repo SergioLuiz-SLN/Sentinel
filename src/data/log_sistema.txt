@@ -1,0 +1,6 @@
+PANEL DE CONTROLE (22:49:45)
+✅ NORMAL | Serviço: PETR4.SA | Atual: 0 | Mediana: 21094300 | Limite: 31641450
+✅ NORMAL | Serviço: VALE3.SA | Atual: 0 | Mediana: 11791900 | Limite: 17687850
+✅ NORMAL | Serviço: ITUB4.SA | Atual: 0 | Mediana: 23047700 | Limite: 34571550
+✅ NORMAL | Serviço: ABEV3.SA | Atual: 0 | Mediana: 17744600 | Limite: 26616900
+✅ NORMAL | Serviço: BBDC4.SA | Atual: 0 | Mediana: 25467200 | Limite: 38200800
