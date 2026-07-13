@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.env
+.venv/
+venv/
+
+# Dados e Logs (Não expor dados corporativos!)
+*.xlsx
+*.csv
+*.txt
+*.json
+!config_motor_example.json
+
+# OS
+.DS_Store
+Thumbs.db
