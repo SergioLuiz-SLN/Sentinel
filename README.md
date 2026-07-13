@@ -130,13 +130,13 @@ Essa abordagem reduz significativamente os falsos positivos quando comparada a s
 Clone o repositório:
 
 ```bash
-git clone https://github.com/SergioLuiz-SLN/Sentinela.git
+git clone https://github.com/SergioLuiz-SLN/Sentinel.git
 ```
 
 Acesse a pasta do projeto:
 
 ```bash
-cd Sentinela
+cd Sentinel
 ```
 
 Instale as dependências:
