@@ -1,6 +1,6 @@
-MOTOR:12/07/2026 22:37:38
-✅ NORMAL | Serviço: PETR4.SA | Data: 10/07/2026 | Preço: 39.65 | Atual: 27316800 | Mediana: 32680400 | Limite: 49020600
-✅ NORMAL | Serviço: VALE3.SA | Data: 10/07/2026 | Preço: 74.18 | Atual: 22142400 | Mediana: 18697800 | Limite: 28046700
-✅ NORMAL | Serviço: ITUB4.SA | Data: 10/07/2026 | Preço: 44.3 | Atual: 28815100 | Mediana: 21167900 | Limite: 31751850
-🚨 ANOMALIA | Serviço: ABEV3.SA | Data: 10/07/2026 | Preço: 15.82 | Atual: 34757600 | Mediana: 22562950 | Limite: 33844425
-🚨 ANOMALIA | Serviço: BBDC4.SA | Data: 10/07/2026 | Preço: 18.86 | Atual: 48063400 | Mediana: 25328450 | Limite: 37992675
+MOTOR:14/07/2026 20:16:22
+✅ NORMAL | Serviço: PETR4.SA | Data: 14/07/2026 | Preço: 40.66 | Atual: 32582600 | Mediana: 32278450 | Limite: 48417675
+✅ NORMAL | Serviço: VALE3.SA | Data: 14/07/2026 | Preço: 74.01 | Atual: 14765900 | Mediana: 17644300 | Limite: 26466450
+✅ NORMAL | Serviço: ITUB4.SA | Data: 14/07/2026 | Preço: 43.63 | Atual: 15374200 | Mediana: 21113100 | Limite: 31669650
+✅ NORMAL | Serviço: ABEV3.SA | Data: 14/07/2026 | Preço: 15.81 | Atual: 17904200 | Mediana: 23395100 | Limite: 35092650
+🚨 ANOMALIA | Serviço: BBDC4.SA | Data: 14/07/2026 | Preço: 18.63 | Atual: 53102100 | Mediana: 25601500 | Limite: 38402250
