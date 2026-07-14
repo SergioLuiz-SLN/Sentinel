@@ -2,6 +2,10 @@
 
 > **Python engine for statistical anomaly detection using historical moving median analysis.**
 
+<p align="center">
+  <img src="assets/dashboard.png" width="900">
+</p>
+
 Sentinel é um motor de análise estatística desenvolvido para identificar anomalias operacionais em tempo real através da comparação entre a volumetria atual e o comportamento histórico equivalente.
 
 Ao contrário de sistemas baseados em limites fixos (*static thresholds*), o Sentinel utiliza uma abordagem adaptativa baseada em **Mediana Histórica Móvel** e **Median Absolute Deviation (MAD)**, reduzindo falsos positivos e tornando a detecção de incidentes muito mais confiável.
