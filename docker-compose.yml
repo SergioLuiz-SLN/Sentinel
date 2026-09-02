@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Sentinel Anomaly Engine
+  engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sentinel-engine
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./config:/app/config
+      - ./data:/app/data
+    command: python src/anomaly_engine.py
+    restart: unless-stopped
+    networks:
+      - sentinel-network
+
+  # Sentinel Dashboard
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sentinel-dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./config:/app/config
+      - ./data:/app/data
+    command: streamlit run src/dashboard_anomalias.py --server.port=8501 --server.address=0.0.0.0
+    depends_on:
+      - engine
+    restart: unless-stopped
+    networks:
+      - sentinel-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  sentinel-network:
+    driver: bridge
