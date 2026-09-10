@@ -1,6 +1,6 @@
 """
 ╔════════════════════════════════════════════════════════════════════════════╗
-║  SENTINEL — COMMAND CENTER                                                ║
+║  SENTINEL — COMMAND CENTER (UNIFIED)                                       ║
 ║  Real-Time Anomaly Detection Platform                                      ║
 ║  © 2024 SLN IT Solutions                                                   ║
 ╚════════════════════════════════════════════════════════════════════════════╝
@@ -9,12 +9,14 @@
 from __future__ import annotations
 
 import os
+import json
+import time
+from datetime import datetime
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import streamlit as st
-from datetime import datetime
-
+import yfinance as yf
 
 # ──────────────────── CONFIGURAÇÃO DA PÁGINA ──────────────────── #
 
@@ -25,16 +27,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-
 # ──────────────────── FUNÇÕES UTILITÁRIAS ──────────────────── #
-
-def corrigir_texto(texto: str) -> str:
-    """Corrige logs antigos em UTF-8 interpretados como latin-1."""
-    try:
-        return texto.encode("latin1").decode("utf-8")
-    except (UnicodeEncodeError, UnicodeDecodeError):
-        return texto
-
 
 def abreviar_volume(valor: float) -> str:
     """Formata valores grandes em notação abreviada."""
@@ -44,46 +37,60 @@ def abreviar_volume(valor: float) -> str:
         return f"{valor / 1_000:.1f}K"
     return f"{valor:.0f}"
 
-
 def calcular_desvio_percentual(atual: float, baseline: float) -> float:
     """Calcula desvio percentual em relação ao baseline."""
     return ((atual / baseline - 1) * 100) if baseline > 0 else 0
 
+def carregar_config() -> list:
+    """Carrega os ativos do arquivo de configuração ou usa um fallback."""
+    try:
+        src_dir = os.path.dirname(os.path.abspath(__file__))
+        root_dir = os.path.dirname(src_dir)
+        config_path = os.path.join(root_dir, "config", "config_motor.json")
+        with open(config_path, "r", encoding="utf-8") as f:
+            return json.load(f)["parametros"]["ativos"]
+    except Exception:
+        # Fallback caso o arquivo de configuração não exista
+        return ["PETR4.SA", "VALE3.SA", "ITUB4.SA", "BBDC4.SA", "ABEV3.SA"]
 
-@st.cache_data(ttl=5)
-def ler_log_processado():
-    """Lê e processa o log do motor de detecção."""
-    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    caminho_log = os.path.join(raiz, "data", "log_sistema.txt")
-    
-    if not os.path.exists(caminho_log):
-        return pd.DataFrame(), None
-    
-    with open(caminho_log, "r", encoding="utf-8") as arquivo:
-        linhas = [corrigir_texto(linha.strip()) for linha in arquivo if linha.strip()]
-    
-    if not linhas:
-        return pd.DataFrame(), None
-
+@st.cache_data(ttl=10)
+def processar_dados_mercado():
+    """Busca e processa dados do Yahoo Finance em tempo real (Cache de 10s)."""
+    tickers = carregar_config()
+    horario_motor = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     dados = []
-    for linha in linhas[1:]:
-        if "Serviço:" not in linha:
-            continue
+
+    for ticker in tickers:
         try:
-            partes = linha.split(" | ")
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period="2mo").tail(20)
+            
+            if hist.empty:
+                continue
+
+            ultimo_candle = hist.iloc[-1]
+            data_yahoo = hist.index[-1].strftime("%d/%m/%Y")
+            volume_atual = int(ultimo_candle["Volume"])
+            mediana = int(hist["Volume"].median())
+            limite = int(mediana * 1.5)
+            preco = round(float(ultimo_candle["Close"]), 2)
+            
+            status = "ANOMALIA" if volume_atual > limite else "NORMAL"
+
             dados.append({
-                "Status": "ANOMALIA" if "ANOMALIA" in partes[0] else "NORMAL",
-                "Ativo": partes[1].replace("Serviço:", "").strip().replace(".SA", ""),
-                "Data": partes[2].replace("Data:", "").strip(),
-                "Preço": float(partes[3].replace("Preço:", "").strip()),
-                "Volume atual": int(partes[4].replace("Atual:", "").replace(",", "").strip()),
-                "Mediana": int(partes[5].replace("Mediana:", "").replace(",", "").strip()),
-                "Limite": int(partes[6].replace("Limite:", "").replace(",", "").strip()),
+                "Status": status,
+                "Ativo": ticker.replace(".SA", ""),
+                "Data": data_yahoo,
+                "Preço": preco,
+                "Volume atual": volume_atual,
+                "Mediana": mediana,
+                "Limite": limite,
             })
-        except (IndexError, ValueError):
+        except Exception as erro:
+            print(f"Erro em {ticker}: {erro}")
             continue
-    
-    return pd.DataFrame(dados), linhas[0].replace("MOTOR:", "").strip()
+
+    return pd.DataFrame(dados), horario_motor
 
 
 # ──────────────────── ESTILOS CSS ──────────────────── #
@@ -103,9 +110,7 @@ st.markdown("""
     --warning: #ffd43b;
 }
 
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 .stApp {
     background: linear-gradient(135deg, #050b14 0%, #0a1829 50%, #08111d 100%);
@@ -120,7 +125,6 @@ st.markdown("""
     max-width: 1600px;
 }
 
-/* ── HEADER & HERO ── */
 .hero {
     display: flex;
     justify-content: space-between;
@@ -188,7 +192,6 @@ st.markdown("""
     50% { opacity: 0.5; }
 }
 
-/* ── MÉTRICAS ── */
 div[data-testid="stMetric"] {
     background: linear-gradient(135deg, rgba(20, 32, 48, 0.95), rgba(12, 21, 33, 0.95));
     border: 1px solid var(--line);
@@ -218,7 +221,6 @@ div[data-testid="stMetricValue"] {
     font-weight: 700;
 }
 
-/* ── SEÇÕES ── */
 .section-label {
     color: var(--muted);
     text-transform: uppercase;
@@ -229,7 +231,6 @@ div[data-testid="stMetricValue"] {
     font-weight: 600;
 }
 
-/* ── INSIGHTS ── */
 .insight {
     height: 100%;
     background: linear-gradient(145deg, #122338, #0d1826);
@@ -241,9 +242,7 @@ div[data-testid="stMetricValue"] {
     transition: all 0.3s ease;
 }
 
-.insight:hover {
-    border-color: var(--cyan);
-}
+.insight:hover { border-color: var(--cyan); }
 
 .insight-title {
     color: var(--muted);
@@ -268,23 +267,11 @@ div[data-testid="stMetricValue"] {
     line-height: 1.7;
 }
 
-.insight-alert {
-    border-left: 4px solid var(--alert);
-}
+.insight-alert { border-left: 4px solid var(--alert); }
+.insight-alert .insight-value { color: var(--alert); }
+.insight-success { border-left: 4px solid var(--success); }
+.insight-success .insight-value { color: var(--success); }
 
-.insight-alert .insight-value {
-    color: var(--alert);
-}
-
-.insight-success {
-    border-left: 4px solid var(--success);
-}
-
-.insight-success .insight-value {
-    color: var(--success);
-}
-
-/* ── BOTÕES ── */
 .stButton > button {
     border: 1.5px solid var(--cyan);
     background: rgba(80, 227, 194, 0.1);
@@ -302,7 +289,6 @@ div[data-testid="stMetricValue"] {
     box-shadow: 0 0 20px rgba(80, 227, 194, 0.3);
 }
 
-/* ── DATAFRAME ── */
 [data-testid="stDataFrame"] {
     border: 1px solid var(--line);
     border-radius: 12px;
@@ -310,14 +296,9 @@ div[data-testid="stMetricValue"] {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
-/* ── RESPONSIVO ── */
 @media (max-width: 800px) {
     .block-container { padding: 1.2rem; }
-    .hero { 
-        align-items: flex-start;
-        gap: 1rem;
-        flex-direction: column;
-    }
+    .hero { align-items: flex-start; gap: 1rem; flex-direction: column; }
     .hero-left h1 { font-size: 1.8rem; }
 }
 </style>
@@ -326,7 +307,7 @@ div[data-testid="stMetricValue"] {
 
 # ──────────────────── CARREGAMENTO DE DADOS ──────────────────── #
 
-df, hora_motor = ler_log_processado()
+df, hora_motor = processar_dados_mercado()
 
 
 # ──────────────────── HEADER ──────────────────── #
@@ -346,17 +327,11 @@ st.markdown("""
 # ──────────────────── VERIFICAÇÃO DE DADOS ──────────────────── #
 
 if df.empty:
-    st.warning("⏳ O Sentinel está aguardando a primeira execução do motor de análise.")
-    st.info("Execute `python src/anomaly_engine.py` para iniciar o processamento.", icon="ℹ️")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🔄 Atualizar painel", use_container_width=True):
-            st.cache_data.clear()
-            st.rerun()
-    with col2:
-        if st.button("📖 Ver documentação", use_container_width=True):
-            st.info("Acesse o README.md para mais informações sobre configuração.")
+    st.warning("⏳ Falha ao recuperar os ativos financeiros.")
+    st.info("Verifique a conexão de internet ou o arquivo config_motor.json.", icon="ℹ️")
+    if st.button("🔄 Tentar novamente", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
     st.stop()
 
 
@@ -377,41 +352,20 @@ st.markdown('<div class="section-label">📊 KPIs de Operação</div>', unsafe_a
 kpi_cols = st.columns(5)
 
 with kpi_cols[0]:
-    kpi_cols[0].metric(
-        "Ativos Monitorados",
-        num_ativos,
-        delta=f"{num_ativos} em análise"
-    )
+    kpi_cols[0].metric("Ativos Monitorados", num_ativos, delta=f"{num_ativos} em análise")
 
 with kpi_cols[1]:
     delta_text = f"{num_anomalias} crítico{'s' if num_anomalias != 1 else ''}" if num_anomalias > 0 else "Tudo normal"
-    kpi_cols[1].metric(
-        "Alertas Críticos",
-        num_anomalias,
-        delta=delta_text,
-        delta_color="inverse" if num_anomalias > 0 else "normal"
-    )
+    kpi_cols[1].metric("Alertas Críticos", num_anomalias, delta=delta_text, delta_color="inverse" if num_anomalias > 0 else "normal")
 
 with kpi_cols[2]:
-    kpi_cols[2].metric(
-        "Estabilidade Operacional",
-        f"{normalidade:.1f}%",
-        delta="Dentro dos limites" if normalidade >= 90 else "Investigar"
-    )
+    kpi_cols[2].metric("Estabilidade Operacional", f"{normalidade:.1f}%", delta="Dentro dos limites" if normalidade >= 90 else "Investigar")
 
 with kpi_cols[3]:
-    kpi_cols[3].metric(
-        "Maior Desvio Detectado",
-        f"+{maior_desvio:.1f}%",
-        delta="Acima do baseline"
-    )
+    kpi_cols[3].metric("Maior Desvio Detectado", f"+{maior_desvio:.1f}%", delta="Acima do baseline")
 
 with kpi_cols[4]:
-    kpi_cols[4].metric(
-        "Desvio Médio",
-        f"{taxa_desvio_medio:+.1f}%",
-        delta="Variação geral"
-    )
+    kpi_cols[4].metric("Desvio Médio", f"{taxa_desvio_medio:+.1f}%", delta="Variação geral")
 
 
 # ──────────────────── GRÁFICO PRINCIPAL ──────────────────── #
@@ -420,68 +374,33 @@ st.markdown(f'<div class="section-label">📈 Panorama de Mercado · Última lei
 
 fig = go.Figure()
 
-# Cores por status
 cores = ["#ff6b6b" if status == "ANOMALIA" else "#3d84c6" for status in df["Status"]]
 
-# Barras de volume atual
 fig.add_trace(go.Bar(
-    x=df["Ativo"],
-    y=df["Volume atual"],
-    name="Volume Atual",
+    x=df["Ativo"], y=df["Volume atual"], name="Volume Atual",
     marker=dict(color=cores, line=dict(width=0)),
-    hovertemplate="<b>%{x}</b><br>Volume Atual: %{y:,.0f}<extra></extra>",
-    showlegend=True
+    hovertemplate="<b>%{x}</b><br>Volume Atual: %{y:,.0f}<extra></extra>", showlegend=True
 ))
 
-# Linha de mediana histórica
 fig.add_trace(go.Scatter(
-    x=df["Ativo"],
-    y=df["Mediana"],
-    name="Baseline (Mediana Móvel)",
-    mode="lines+markers",
-    line=dict(color="#50e3c2", width=3),
+    x=df["Ativo"], y=df["Mediana"], name="Baseline (Mediana Móvel)",
+    mode="lines+markers", line=dict(color="#50e3c2", width=3),
     marker=dict(size=7, symbol="circle"),
-    hovertemplate="<b>%{x}</b><br>Mediana: %{y:,.0f}<extra></extra>",
-    showlegend=True
+    hovertemplate="<b>%{x}</b><br>Mediana: %{y:,.0f}<extra></extra>", showlegend=True
 ))
 
-# Linha de limite estatístico
 fig.add_trace(go.Scatter(
-    x=df["Ativo"],
-    y=df["Limite"],
-    name="Limite Estatístico (MAD 3σ)",
-    mode="lines",
-    line=dict(color="#ffd43b", width=2.5, dash="dot"),
-    hovertemplate="<b>%{x}</b><br>Limite: %{y:,.0f}<extra></extra>",
-    showlegend=True
+    x=df["Ativo"], y=df["Limite"], name="Limite Estatístico (MAD 3σ)",
+    mode="lines", line=dict(color="#ffd43b", width=2.5, dash="dot"),
+    hovertemplate="<b>%{x}</b><br>Limite: %{y:,.0f}<extra></extra>", showlegend=True
 ))
 
 fig.update_layout(
-    height=420,
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(18,28,43,.35)",
-    margin=dict(l=12, r=12, t=18, b=12),
-    font=dict(family="Manrope", color="#aebccc", size=12),
-    legend=dict(
-        orientation="h",
-        y=1.12,
-        x=0,
-        font=dict(size=11),
-        bgcolor="rgba(0,0,0,0.3)",
-        bordercolor="var(--line)",
-        borderwidth=1
-    ),
-    xaxis=dict(
-        showgrid=False,
-        zeroline=False,
-        tickfont=dict(color="#dbe6f2")
-    ),
-    yaxis=dict(
-        gridcolor="#233246",
-        zeroline=False,
-        tickformat="~s",
-        title=None
-    ),
+    height=420, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(18,28,43,.35)",
+    margin=dict(l=12, r=12, t=18, b=12), font=dict(family="Manrope", color="#aebccc", size=12),
+    legend=dict(orientation="h", y=1.12, x=0, font=dict(size=11), bgcolor="rgba(0,0,0,0.3)", bordercolor="var(--line)", borderwidth=1),
+    xaxis=dict(showgrid=False, zeroline=False, tickfont=dict(color="#dbe6f2")),
+    yaxis=dict(gridcolor="#233246", zeroline=False, tickformat="~s", title=None),
     hovermode="x unified"
 )
 
@@ -498,7 +417,6 @@ with col_rec:
     if not anomalias.empty:
         ativo_critico = anomalias.iloc[0]
         excesso = calcular_desvio_percentual(ativo_critico["Volume atual"], ativo_critico["Limite"])
-        
         st.markdown(f"""
         <div class="insight insight-alert">
             <div class="insight-title">🚨 Ação Necessária</div>
@@ -523,15 +441,14 @@ with col_rec:
 
 with col_status:
     st.markdown('<div class="section-label">🔧 Status do Motor</div>', unsafe_allow_html=True)
-    
     st.markdown(f"""
     <div class="insight">
         <div class="insight-title">Última Execução</div>
         <div class="insight-value">{hora_motor or "—"}</div>
         <div class="insight-text">
-            Motor executando com baseline adaptativo. 
-            Algoritmo: Mediana Móvel + MAD (3σ). 
-            Atualização a cada 5 segundos.
+            Motor executando integrado na interface web com baseline adaptativo. 
+            Algoritmo: Mediana Móvel + Limite Estático (1.5x). 
+            Atualização: Cache Streamlit (TTL 10s).
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -543,22 +460,17 @@ st.markdown('<div class="section-label">📋 Fila de Observabilidade</div>', uns
 
 tabela_display = df.copy()
 
-# Formatar colunas numéricas
 for coluna in ["Volume atual", "Mediana", "Limite"]:
     tabela_display[coluna] = tabela_display[coluna].apply(abreviar_volume)
 
-# Formatar status
 tabela_display["Status"] = tabela_display["Status"].apply(
     lambda x: "🔴 Atenção" if x == "ANOMALIA" else "🟢 Normal"
 )
 
-# Calcular desvio
 tabela_display["Desvio %"] = df.apply(
-    lambda row: f"{calcular_desvio_percentual(row['Volume atual'], row['Mediana']):+.1f}%",
-    axis=1
+    lambda row: f"{calcular_desvio_percentual(row['Volume atual'], row['Mediana']):+.1f}%", axis=1
 )
 
-# Reordenar colunas
 tabela_display = tabela_display[["Status", "Ativo", "Data", "Preço", "Volume atual", "Mediana", "Limite", "Desvio %"]]
 
 st.dataframe(
@@ -577,12 +489,9 @@ st.dataframe(
 col_info, col_actions = st.columns([3, 1])
 
 with col_info:
-    st.caption(
-        "🛡️ SENTINEL v1.0 · SLN IT SOLUTIONS · "
-        "Detecção robusta de anomalias para operações que não podem parar."
-    )
+    st.caption("🛡️ SENTINEL v2.0 (Unified Architecture) · SLN IT SOLUTIONS")
 
 with col_actions:
-    if st.button("🔄 Atualizar", use_container_width=True):
+    if st.button("🔄 Atualizar Processamento", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
