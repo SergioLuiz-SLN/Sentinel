@@ -40,37 +40,12 @@ Organizações monitoram milhões de transações, eventos e alertas diariamente
 - ✅ **Transparente**: Explicável estatisticamente
 
 ---
-
-## 🎯 Case Study: B3 Assets Monitor
-
-### Cliente
-**Fundo de Investimento Multinacional** operando na B3 (Bolsa de Valores Brasileira)
-
-### Desafio
-- 🔴 **50K+ alertas falsos/dia** de sistema anterior
-- 🔴 Equipe de operações sobrecarregada
-- 🔴 Impossível identificar anomalias reais
-- 🔴 Perda de oportunidades de negócio
-
 ### Implementação Sentinel
 ```
 Período: 3 semanas
 Ativo monitorado: 5 principais ativos B3 (PETR4, VALE3, ITUB4, ABEV3, BBDC4)
 Volume processado: 2M+ transações/dia
 ```
-
-### Resultados
-| Métrica | Antes | Depois | Melhoria |
-|---------|-------|--------|----------|
-| Alertas/dia | 50,000 | 847 | **98.3% ↓** |
-| Tempo de resposta | 4.2h | 12min | **21x ↑** |
-| Acurácia | 62% | 96.8% | **+34.8pp** |
-| ROI | - | 340% | **4mo payback** |
-
-### Feedback do Cliente
-> *"Passamos de caos operacional para gestão proativa. O Sentinel é agora fundamental na nossa estratégia de risco."*
-> — VP Operations, Fundo de Investimento
-
 ---
 
 ## 🚀 Features Principais
@@ -145,30 +120,21 @@ Persistence Layer: JSON Configuration + Logs
 ```
 Sentinel/
 │
-├── 📄 README.md                    # Documentação principal
-├── 📄 Requirements.txt             # Dependências Python
-├── 📄 ARCHITECTURE.md              # Documentação técnica
-├── 📄 DEPLOYMENT.md                # Guia de deployment
+├── 📄 README.md
+├── 📄 requirements.txt
+├── 📄 docker-compose.yml
+├── 📄 .env.example
 ├── .gitignore
 │
 ├── config/
-│   └── config_motor.json          # Configuração central
+│ └── config_motor.json # Configuração central
 │
 ├── data/
-│   ├── .gitkeep
-│   └── log_sistema.txt            # Output do engine
+│ └── log_sistema.txt # Output do engine
 │
-├── src/
-│   ├── anomaly_engine.py          # 🔧 Motor principal
-│   ├── dashboard_anomalias.py     # 📊 Dashboard
-│   ├── __init__.py
-│   └── data/
-│       └── log_sistema.txt
-│
-└── docs/
-    ├── API.md
-    ├── CONTRIBUTING.md
-    └── TROUBLESHOOTING.md
+└── src/
+├── anomaly_engine.py # Motor principal
+└── dashboard_anomalias.py # Dashboard Streamlit
 ```
 
 ---
@@ -283,51 +249,14 @@ Testado com dataset de **2.5M transações/dia**:
 
 ---
 
-## 🔐 Segurança & Compliance
-
-- ✅ **Dados em Repouso**: Logs em JSON local/S3
-- ✅ **Dados em Trânsito**: HTTPS para webhooks
-- ✅ **Auditoria**: Todas as anomalias registradas
-- ✅ **GDPR Ready**: Remoção de dados configurável
-- ✅ **SOC 2 Type II**: Certificação disponível
-
----
-
-## 🤝 Suporte & Documentação
-
-- 📖 [**Documentação Técnica Completa**](ARCHITECTURE.md)
-- 🚀 [**Guia de Deployment**](DEPLOYMENT.md)
-- 🔧 [**API Reference**](docs/API.md)
-- 🐛 [**Troubleshooting**](docs/TROUBLESHOOTING.md)
-- 💬 [**Issues & Discussions**](https://github.com/slnit/sentinel/issues)
-
 ---
 
 ## 📄 Licença
 
-MIT License — Desenvolvido com ❤️ por **SLN IT Solutions**
+Uso para demonstração e estudo, criado por Sergio Luiz com ajuda importantíssima das IA's.
 
 ---
-
-## 🌟 Roadmap
-
-- [ ] v2.0: Machine Learning module (Prophet, LSTM)
-- [ ] v2.0: API REST completa
-- [ ] v2.0: Alertas por SMS/Slack/Teams
-- [ ] v2.0: UI React (dashboard standalone)
-- [ ] v2.0: Suporte a Kubernetes
-- [ ] v2.0: Multi-tenancy
-
 ---
-
-<div align="center">
-
-**Desenvolvido por SLN IT Solutions** • [www.slnit.com.br](https://www.slnit.com.br)
-
-Transforme Dados em Inteligência | Detecte Anomalias Antes Que Se Tornem Crises
-
-</div>
-
 ---
 
 # 📈 Como Funciona
